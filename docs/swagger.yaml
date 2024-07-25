@@ -1,0 +1,317 @@
+definitions:
+  models.CreateUserRequest:
+    properties:
+      passportNumber:
+        type: string
+    type: object
+  models.DeleteUserRequest:
+    properties:
+      id:
+        type: string
+    type: object
+  models.FilterResponse:
+    properties:
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
+  models.GetTaskInfo:
+    properties:
+      id:
+        type: string
+      task:
+        type: string
+      time:
+        type: string
+    type: object
+  models.GetTaskResponse:
+    properties:
+      tasks:
+        items:
+          $ref: '#/definitions/models.GetTaskInfo'
+        type: array
+      user_id:
+        type: string
+    type: object
+  models.Task:
+    properties:
+      id:
+        type: string
+      task:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Timer:
+    properties:
+      task_id:
+        type: string
+    type: object
+  models.User:
+    properties:
+      address:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      passport:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+  models.UserTask:
+    properties:
+      text:
+        type: string
+      user_id:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: This is time_tracker server.
+  title: Time Tracker API
+paths:
+  /task/get:
+    get:
+      consumes:
+      - application/json
+      description: Handles request to get tasks for a user based on user ID.
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Start Time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time
+        in: query
+        name: end_time
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User ID, list of tasks and total
+          schema:
+            items:
+              $ref: '#/definitions/models.GetTaskResponse'
+            type: array
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Get tasks
+      tags:
+      - tasks
+  /task/new:
+    post:
+      consumes:
+      - application/json
+      description: Handles request to create a new task for a user.
+      parameters:
+      - description: User ID and text
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Details of the newly created task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Create new task
+      tags:
+      - tasks
+  /task/start:
+    patch:
+      consumes:
+      - application/json
+      description: Handles request to start a timer for a task.
+      parameters:
+      - description: Task ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Timer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Start timer for task
+      tags:
+      - tasks
+  /task/stop:
+    patch:
+      consumes:
+      - application/json
+      description: Handles request to stop a timer for a task.
+      parameters:
+      - description: Task ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Timer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Stop timer for task
+      tags:
+      - tasks
+  /user/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Handles request to delete a user by ID.
+      parameters:
+      - description: User ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Delete user
+      tags:
+      - users
+  /user/get:
+    get:
+      consumes:
+      - application/json
+      description: Handles request to get users by filter.
+      parameters:
+      - description: User ID
+        in: query
+        name: fields.id
+        type: string
+      - description: User Passport
+        in: query
+        name: fields.passport
+        type: string
+      - description: Username
+        in: query
+        name: fields.name
+        type: string
+      - description: User Surname
+        in: query
+        name: fields.surname
+        type: string
+      - description: User Patronymic
+        in: query
+        name: fields.patronymic
+        type: string
+      - description: User Address
+        in: query
+        name: fields.address
+        type: string
+      - description: Maximum number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset from the beginning of results
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users and total results
+          schema:
+            $ref: '#/definitions/models.FilterResponse'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Get users
+      tags:
+      - users
+  /user/new:
+    post:
+      consumes:
+      - application/json
+      description: Handles request to create a new user by passportNumber and returns
+        the user information in JSON.
+      parameters:
+      - description: Passport
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Creating a new user
+      tags:
+      - users
+  /user/set:
+    patch:
+      consumes:
+      - application/json
+      description: Handles request to update user information
+      parameters:
+      - description: User Information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Update user
+      tags:
+      - users
+swagger: "2.0"
