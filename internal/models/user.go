@@ -4,6 +4,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type CreateUserRequest struct {
+	PassportNumber *string `json:"passportNumber,omitempty"`
+}
+
 type User struct {
 	ID         *uuid.UUID `json:"id,omitempty"`
 	Passport   *string    `json:"passport,omitempty"`
@@ -21,7 +25,7 @@ type FilterRequest struct {
 
 type FilterResponse struct {
 	Users []User
-	Total int64 // сколько всего записей пользователей с фиьтрами из запроса
+	Total int64
 }
 
 type DeleteUserRequest struct {

@@ -2,6 +2,7 @@ package app
 
 import (
 	client "github.com/VikaPaz/time_tracker/internal/clients"
+	"github.com/VikaPaz/time_tracker/internal/models"
 	"github.com/VikaPaz/time_tracker/internal/repository"
 	"github.com/VikaPaz/time_tracker/internal/repository/task"
 	"github.com/VikaPaz/time_tracker/internal/repository/user"
@@ -9,14 +10,15 @@ import (
 	taskService "github.com/VikaPaz/time_tracker/internal/service/task"
 	userService "github.com/VikaPaz/time_tracker/internal/service/user"
 	"github.com/joho/godotenv"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 )
 
-func Run() error {
+func Run(logger *logrus.Logger) error {
 	if err := godotenv.Overload(); err != nil {
-		log.Print("No .env file found")
+		logger.Errorf("Error loading .env file")
+		return models.ErrLoadEnvFailed
 	}
 
 	confPostgres := repository.Config{
@@ -29,20 +31,30 @@ func Run() error {
 
 	dbConn, err := repository.Connection(confPostgres)
 	if err != nil {
+		logger.Errorf("Error connecting to database")
 		return err
 	}
-	userRepo := user.NewRepository(dbConn)
-	taskRepo := task.NewRepository(dbConn)
+	logger.Infof("Connected to PostgreSQL")
 
-	userInf := client.NewClient("http://127.0.0.1:8080")
+	userRepo := user.NewRepository(dbConn, logger)
+	taskRepo := task.NewRepository(dbConn, logger)
 
-	userService := userService.NewService(userRepo, userInf)
-	taskService := taskService.NewService(taskRepo)
+	userInf, err := client.NewClient(os.Getenv("INFO_SERVER"), logger)
+	if err != nil {
+		return err
+	}
 
-	srv := server.NewServer(userService, taskService)
+	userService := userService.NewService(userRepo, userInf, logger)
+	taskService := taskService.NewService(taskRepo, logger)
 
+	srv := server.NewServer(userService, taskService, logger)
+
+	logger.Infof("Running server on port %s", os.Getenv("PORT"))
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), srv.Handlers())
-	//err = http.ListenAndServe(":8080", srv.Handlers())
+	if err != nil {
+		logger.Errorf("Error starting server")
+		return models.ErrServerFailed
+	}
 
 	return err
 }

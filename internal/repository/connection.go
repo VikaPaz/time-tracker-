@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"github.com/VikaPaz/time_tracker/internal/models"
 	_ "github.com/lib/pq"
 )
 
@@ -15,7 +16,7 @@ func Connection(conf Config) (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		return nil, err
+		return nil, models.ErrConnectionDBFailed
 	}
 
 	return db, db.Ping()
